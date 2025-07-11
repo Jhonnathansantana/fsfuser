@@ -1,0 +1,41 @@
+version: '3.8'
+
+networks:
+  rustdesk-net:
+    driver: bridge
+
+volumes:
+  rustdesk-data:
+
+services:
+  # --- Configuración del Servidor de ID ---
+  hbbs:
+    image: rustdesk/rustdesk-server:latest
+    container_name: hbbs 
+    restart: unless-stopped
+    networks:
+      - rustdesk-net
+    ports:
+      - "21115:21115"
+      - "21116:21116"
+      - "21116:21116/udp"
+      - "21118:21118"
+    volumes:
+      - rustdesk-data:/root
+    # El comando de configuración clave está aquí
+    command: hbbs -r tu.dominio.o.ip.publica:21117
+
+  # --- Configuración del Servidor de Relay ---
+  hbbr:
+    image: rustdesk/rustdesk-server:latest
+    container_name: hbbr
+    restart: unless-stopped
+    networks:
+      - rustdesk-net
+    ports:
+      - "21117:21117"
+      - "21119:21119"
+    volumes:
+      - rustdesk-data:/root
+    # Este servicio no necesita argumentos adicionales
+    command: hbbr
