@@ -80,20 +80,12 @@ monitoring/
 
 Una vez que la pila esté en funcionamiento, puedes acceder a las diferentes interfaces de usuario:
 
--   **Prometheus**: `http://localhost:9090`
+-   **Prometheus**: `http://localhost:9091`
+    -   **Nota**: El puerto del host se ha establecido en `9091` para evitar conflictos comunes con el puerto `9090`.
     -   Puedes explorar las métricas recolectadas y el estado de los `targets` (en `Status > Targets`).
 -   **Grafana**: `http://localhost:3000`
     -   **Login inicial**: `admin` / `admin`. Se te pedirá que cambies la contraseña en el primer inicio de sesión.
-    -   **Añadir fuentes de datos**:
-        1.  Ve a `Configuration (engranaje) > Data Sources`.
-        2.  **Añadir Prometheus**:
-            -   Selecciona `Prometheus`.
-            -   En el campo `URL`, introduce `http://prometheus:9090`.
-            -   Haz clic en `Save & Test`.
-        3.  **Añadir Loki**:
-            -   Selecciona `Loki`.
-            -   En el campo `URL`, introduce `http://loki:3100`.
-            -   Haz clic en `Save & Test`.
+    -   **Fuentes de Datos (Data Sources)**: Las fuentes de datos de **Prometheus** y **Loki** se configuran automáticamente al iniciar Grafana gracias al sistema de aprovisionamiento. No es necesario añadirlas manualmente.
     -   **Explorar datos**:
         -   Usa la sección `Explore` para consultar métricas de Prometheus (con PromQL) y logs de Loki (con LogQL).
         -   Importa dashboards pre-construidos desde la comunidad de Grafana (por ejemplo, para Node Exporter o Docker) o crea los tuyos propios.

@@ -1,39 +1,62 @@
+# --- Configuración Global ---
 auth_enabled: false
 
+# --- Configuración del Servidor ---
+# Define los puertos en los que Loki escuchará las peticiones.
 server:
-  http_listen_port: 3100
+  http_listen_port: 3100   # Puerto para la API HTTP (usado por Grafana y Promtail).
+  grpc_listen_port: 9096   # Puerto para la comunicación interna gRPC.
 
-ingester:
-  lifecycler:
-    address: 127.0.0.1
-    ring:
-      kvstore:
-        store: inmemory
-      replication_factor: 1
-    final_sleep: 0s
-  chunk_idle_period: 5m
-  chunk_retain_period: 1m
-  max_transfer_retries: 0
+# --- Configuración Común ---
+# Parámetros compartidos por todos los componentes de Loki.
+common:
+  instance_addr: 127.0.0.1
+  path_prefix: /loki # Directorio base para almacenar todos los datos de Loki.
+  storage:
+    filesystem: # Usar el sistema de archivos local para el almacenamiento.
+      chunks_directory: /loki/chunks
+      rules_directory: /loki/rules
+  replication_factor: 1 # Adecuado para una única instancia (sin réplicas).
+  ring:
+    kvstore:
+      store: inmemory # El anillo de coordinación se gestiona en memoria, ideal para un solo nodo.
 
+# --- Optimización de Consultas ---
+# Mejora el rendimiento de las consultas cacheadando los resultados.
+query_range:
+  results_cache:
+    cache:
+      embedded_cache:
+        enabled: true
+        max_size_mb: 100
+
+# --- Configuración del Esquema de Almacenamiento ---
+# Define cómo se estructuran y almacenan los índices y los datos.
 schema_config:
   configs:
-    - from: 2020-10-24
-      store: boltdb-shipper
-      object_store: filesystem
-      schema: v11
+    - from: 2024-01-01
+      store: tsdb # Almacén de índices TSDB, recomendado para Loki 2.8+
+      object_store: filesystem # Los "chunks" de logs se guardan en el sistema de archivos.
+      schema: v13 # Requerido para el almacén de índices TSDB y metadatos estructurados.
       index:
         prefix: index_
         period: 24h
 
-storage_config:
-  boltdb_shipper:
-    active_index_directory: /loki/boltdb-shipper-active
-    cache_location: /loki/boltdb-shipper-cache
-    cache_ttl: 24h
-    shared_store: filesystem
-  filesystem:
-    directory: /loki/chunks
-
+# --- Límites de Ingesta ---
+# Protege a Loki de recibir datos no deseados.
 limits_config:
-  reject_old_samples: true
-  reject_old_samples_max_age: 168h
+  reject_old_samples: true # Rechaza logs que son demasiado antiguos.
+  reject_old_samples_max_age: 168h # (7 días)
+
+# --- Configuración de Alertas (Ruler) ---
+# Permite crear alertas basadas en consultas de logs (LogQL).
+ruler:
+  alertmanager_url: http://alertmanager:9093 # Envía las alertas a Alertmanager.
+  storage:
+    type: local
+    local:
+      directory: /loki/rules # Almacena las reglas de alerta.
+  rule_path: /loki/rules-temp # Directorio temporal para las reglas.
+  ring:
+    kvstore:
+      store: inmemory

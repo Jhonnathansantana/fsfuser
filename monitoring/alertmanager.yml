@@ -1,0 +1,10 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  group_by: ['alertname', 'job']
+  receiver: 'null-receiver'
+
+receivers:
+  - name: 'null-receiver'
+

@@ -8,6 +8,7 @@ volumes:
   prometheus-data:
   grafana-data:
   loki-data: # <-- Volumen añadido para Loki
+  alertmanager-data:
 
 services:
   prometheus:
@@ -17,7 +18,7 @@ services:
     networks:
       - monitoring-net
     ports:
-      - "9090:9090"
+      - "9091:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus-data:/prometheus
@@ -26,6 +27,9 @@ services:
       - '--storage.tsdb.path=/prometheus'
       - '--web.console.libraries=/usr/share/prometheus/console_libraries'
       - '--web.console.templates=/usr/share/prometheus/consoles'
+    depends_on:
+      - alertmanager
+      - cadvisor
 
   grafana:
     image: grafana/grafana-oss:latest
@@ -36,7 +40,9 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - grafana-data:/var/lib/grafana
+      - grafana-data:/var/lib/grafana # Para persistencia de datos de Grafana
+      - ./grafana-provisioning/datasources:/etc/grafana/provisioning/datasources # Aprovisiona los data sources
+      - ./grafana-provisioning/dashboards:/etc/grafana/provisioning/dashboards # Aprovisiona los dashboards
     depends_on: # <-- Grafana ahora depende de Loki para iniciar después
       - prometheus
       - loki
@@ -79,9 +85,9 @@ services:
     ports:
       - "3100:3100"
     volumes:
-      - ./loki-config.yml:/etc/loki/local-config.yaml
+      - ./loki-config.yml:/etc/loki/config.yml
       - loki-data:/loki
-    command: -config.file=/etc/loki/local-config.yaml
+    command: -config.file=/etc/loki/config.yml
 
   promtail:
     image: grafana/promtail:latest
@@ -89,7 +95,24 @@ services:
     restart: unless-stopped
     networks:
       - monitoring-net
+    depends_on:
+      - loki
     volumes:
       - ./promtail-config.yml:/etc/promtail/config.yml
       - /var/run/docker.sock:/var/run/docker.sock # <-- Necesario para descubrir contenedores
     command: -config.file=/etc/promtail/config.yml
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: alertmanager
+    restart: unless-stopped
+    networks:
+      - monitoring-net
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - alertmanager-data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'

@@ -1,6 +1,16 @@
 global:
   scrape_interval: 15s # Recolecta métricas cada 15 segundos.
 
+# Carga los archivos de reglas de alerta
+rule_files:
+  - "alert.rules.yml"
+
+# Configuración de Alertmanager
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['alertmanager:9093']
+
 scrape_configs:
   # Trabajo para monitorear a Prometheus mismo.
   - job_name: 'prometheus'

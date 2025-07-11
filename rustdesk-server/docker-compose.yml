@@ -3,6 +3,9 @@ version: '3.8'
 networks:
   rustdesk-net:
     driver: bridge
+  # Hacemos referencia a la red externa creada por la pila de monitoreo.
+  monitoring_monitoring-net:
+    external: true
 
 volumes:
   rustdesk-data:
@@ -11,10 +14,8 @@ services:
   # --- Configuración del Servidor de ID ---
   hbbs:
     image: rustdesk/rustdesk-server:latest
-    container_name: hbbs 
+    container_name: hbbs
     restart: unless-stopped
-    networks:
-      - rustdesk-net
     ports:
       - "21115:21115"
       - "21116:21116"
@@ -22,16 +23,17 @@ services:
       - "21118:21118"
     volumes:
       - rustdesk-data:/root
-    # El comando de configuración clave está aquí
-    command: hbbs -r tu.dominio.o.ip.publica:21117
+    # Comando con la IP pública para que los clientes encuentren el servidor de relay.
+    command: hbbs -r 192.168.100.253:21117
+    networks:
+      - rustdesk-net
+      - monitoring_monitoring-net
 
   # --- Configuración del Servidor de Relay ---
   hbbr:
     image: rustdesk/rustdesk-server:latest
     container_name: hbbr
     restart: unless-stopped
-    networks:
-      - rustdesk-net
     ports:
       - "21117:21117"
       - "21119:21119"
@@ -39,3 +41,6 @@ services:
       - rustdesk-data:/root
     # Este servicio no necesita argumentos adicionales
     command: hbbr
+    networks:
+      - rustdesk-net
+      - monitoring_monitoring-net
