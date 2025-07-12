@@ -1,4 +1,4 @@
-﻿﻿# 🖥️ Servidor RustDesk Autoalojado con Monitoreo y Métricas
+﻿# 🖥️ Servidor RustDesk Autoalojado con Monitoreo y Métricas
 
 Este proyecto proporciona una configuración completa de Docker Compose para desplegar un servidor de escritorio remoto **RustDesk** autoalojado, junto con una potente **pila de monitoreo** basada en Prometheus, Grafana y Loki.
 
