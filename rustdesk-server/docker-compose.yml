@@ -1,5 +1,8 @@
 version: '3.8'
 
+env_file:
+  - .env
+
 networks:
   rustdesk-net:
     driver: bridge
@@ -24,7 +27,8 @@ services:
     volumes:
       - rustdesk-data:/root
     # Comando con la IP pública para que los clientes encuentren el servidor de relay.
-    command: hbbs -r 192.168.100.253:21117
+    # La variable RUSTDESK_DOMAIN se define en el archivo .env
+    command: hbbs -r ${RUSTDESK_DOMAIN}:21117
     networks:
       - rustdesk-net
       - monitoring_monitoring-net

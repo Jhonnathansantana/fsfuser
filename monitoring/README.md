@@ -1,15 +1,25 @@
-# Servidor RustDesk Autoalojado con Monitoreo
+﻿﻿# 🖥️ Servidor RustDesk Autoalojado con Monitoreo y Métricas
 
-Este repositorio contiene la configuración de Docker para desplegar un servidor de RustDesk autoalojado y una pila de monitoreo para la recolección de logs con Loki.
+Este proyecto proporciona una configuración completa de Docker Compose para desplegar un servidor de escritorio remoto **RustDesk** autoalojado, junto con una potente **pila de monitoreo** basada en Prometheus, Grafana y Loki.
 
-## Características
+## ✨ Características Clave
 
-- **Servidor RustDesk Completo**: Incluye los servicios `hbbs` (Servidor de ID/Rendezvous) y `hbbr` (Servidor de Relay).
-- **Persistencia de Datos**: Utiliza volúmenes de Docker para mantener los datos de RustDesk.
-- **Integración con Monitoreo**: Los contenedores de RustDesk están preparados para conectarse a una red de monitoreo externa (basada en Loki, Grafana, etc.).
-- **Fácil Despliegue**: Orquestado con Docker Compose para un despliegue sencillo.
+- **Servidor RustDesk Completo**: Incluye los servicios `hbbs` (Servidor de ID/Rendezvous) y `hbbr` (Servidor de Relay) para una solución de escritorio remoto totalmente funcional.
+- **Monitoreo Integrado**:
+  - **Logs centralizados con Loki**: Captura y visualiza los logs de los servicios de RustDesk en tiempo real.
+  - **Métricas con Prometheus**: Recolecta métricas del host y de los contenedores.
+  - **Dashboards con Grafana**: Visualiza logs y métricas en dashboards intuitivos.
+- **Configuración Sencilla y Segura**: Utiliza un archivo `.env` para una configuración rápida sin modificar los archivos de Compose, con instrucciones claras para asegurar tu servidor.
+- **Persistencia de Datos**: Todos los datos importantes (RustDesk, Grafana, Prometheus, Loki) se guardan en volúmenes de Docker.
 
-## Estructura del Repositorio
+## 🏗️ Arquitectura
+
+La solución se divide en dos pilas de Docker Compose que se comunican a través de una red externa:
+
+1.  **Pila de Monitoreo (`monitoring`)**: Contiene Grafana, Loki, Promtail, Prometheus, etc. Crea una red llamada `monitoring_monitoring-net`.
+2.  **Pila de RustDesk (`rustdesk-server`)**: Contiene los servicios `hbbs` y `hbbr`. Se conecta a la red `monitoring_monitoring-net` para que Promtail pueda descubrir y recolectar sus logs automáticamente.
+
+## 📂 Estructura del Repositorio
 
 ```
 .
@@ -73,3 +83,28 @@ Para que tus clientes de RustDesk se conecten a tu servidor autoalojado:
 4.  **Key**: Deja este campo en blanco si no has configurado una clave pública en el servidor.
 
 ¡Y listo! Tu cliente ahora se comunicará a través de tu infraestructura.
+
+🔒 Seguridad: Generar y Usar una Clave (Recomendado) + +Para evitar que cualquiera use tu servidor, es fundamental generar una clave y configurarla en tus clientes. + 
+
+1. Genera las claves: Desde el directorio docker/rustdesk-server, ejecuta el siguiente comando. Creará los archivos de clave en el volumen persistente y luego se detendrá.
+
+bash
+docker-compose run --rm hbbs
+
+2. Obtén tu clave pública: Ahora, visualiza la clave pública con uno de los siguientes métodos: +
+
+### Método 1: Leer desde el host (Recomendado)
+
+   ```bash
+
+   sudo cat /var/lib/docker/volumes/rustdesk-server_rustdesk-data/_data/id_ed25519.pub
+
+   ```
+### Método 2: Usar docker exec (si los contenedores ya están corriendo)
+
+   ```bash
+
+   docker exec hbbs cat /root/id_ed25519.pub
+
+   ```
+3. Copia la clave: Copia la cadena de caracteres que aparece. La necesitarás para configurar tus clientes. + +4. Inicia los servicios: Si aún no lo has hecho, inicia el servidor con docker-compose up -d. +
